@@ -23,11 +23,11 @@ Usage: `train.py [-h] [-v] -polya POLYA -cs CS -non NON -model MODEL -l L`
 optional arguments:
   -h, --help     show this help message and exit
   -v, --version  show program's version number and exit
-  -polya POLYA   Poly(A) CS
-  -cs CS         Non-poly(A) CS
-  -non NON       Non-CS
-  -model MODEL   Trained model
-  -l L           Sequence length
+  -polya POLYA   Poly(A) CS, fasta file
+  -cs CS         Non-poly(A) CS, fasta file
+  -non NON       Non-CS, fasta file
+  -model MODEL   File name of trained model
+  -l L           Length of input sequences
 ```
 
 ### Test
@@ -42,7 +42,7 @@ optional arguments:
                         Fasta file to be tested
   -m MODEL, --model MODEL
                         Pre-trained model file
-  -l L                  Sequence length
+  -l L                  Length of input sequences
   -o OUTPUT, --output OUTPUT
                         Output probabilities
 ```
