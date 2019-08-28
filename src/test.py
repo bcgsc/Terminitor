@@ -6,17 +6,13 @@ Created on April 12th 2018
 @author: Chen
 """
 
-import sys
 import numpy as np
 import argparse
 from textwrap import dedent
-from time import strftime
 from itertools import product
 from keras.models import Sequential
-from keras.layers import Dense, Embedding, Flatten, Dropout
+from keras.layers import Dense, Embedding, Flatten
 from keras import optimizers
-from keras.wrappers.scikit_learn import KerasClassifier
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 # One hot encoding for bases
@@ -29,6 +25,7 @@ BASES = {'A': 0,  # 0001
          'g': 2,
          't': 3}
 VERSION = "v0.0.1"
+
 
 def one_hot_encoding(seq, k_list, kmer_encoding):
     encoded_list = np.zeros(len(seq) * len(k_list) - sum(k_list) + len(k_list))
@@ -85,9 +82,9 @@ def create_model(l, weights=''):
 def main():
     parser = argparse.ArgumentParser(
         description=dedent('''
-        Termin(A)ntor test
+        Terminitor test
         -----------------------------------------------------------
-        Given pre-trained models, predict whether a given sequence 
+        Given pre-trained models, predict whether a given sequence
         contains a poly(A) site at specific location or not
         '''),
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -95,7 +92,7 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='Termin(A)ntor ' + VERSION)
     parser.add_argument('-t', '--test_file', help="Fasta file to be tested", required=True)
     parser.add_argument('-m', '--model', help="Pre-trained model file", required=True)
-    parser.add_argument('-l', help="Sequence length", required=True, type=int)
+    parser.add_argument('-l', help="Length of input sequences", required=True, type=int)
     parser.add_argument('-o', '--output', help="Output probabilities", required=True)
 
     kmers = [4, 6, 8, 10]

@@ -8,10 +8,13 @@ Major change on Oct 17th, adopting Design 9
 """
 
 import pysam
-import re
 import pybedtools
-import sys
+import argparse
+from textwrap import dedent
 from copy import deepcopy
+
+
+VERSION = "v0.0.1"
 
 
 def is_polya(seq, forward):
@@ -44,13 +47,41 @@ CHR = ('chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', '
 
 
 def main():
-    annot_trans = sys.argv[1]
-    annot_all = sys.argv[2]
-    aln = sys.argv[3]
-    assem = sys.argv[4]
-    out_file = sys.argv[5]
-    up_len = int(sys.argv[6])
-    down_len = int(sys.argv[7])
+    parser = argparse.ArgumentParser(
+        description=dedent('''
+        Terminitor pipeline extract candidate sequence
+        -----------------------------------------------------------
+        This script is the last step of Terminitor RNA-seq pipeline.
+        It extracts candidate sequence from alignment bam file for
+        testing by the pre-trained neural network model.
+        '''),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument('-v', '--version', action='version', version='Terminitor ' + VERSION)
+    parser.add_argument('-t', '--annot_trans', help="Transcript annotation file, GTF format. This file contains only"
+                                                    "transcript level annotation, can be downloaded from the ftp site"
+                                                    "provided on our Github page",
+                        required=True)
+    parser.add_argument('-a', '--annot_all', help="Ensembl annotation file, GTF format. Can be downloaded from Ensembl"
+                                                  "ftp site", required=True)
+    parser.add_argument('-m', '--aln', help="The alignment file from assembled transcript contigs to reference genome"
+                                            "in bam format.", required=True)
+    parser.add_argument('-g', '--genome', help="Reference genome assembly in Fasta format. Can be downloaded from"
+                                               "Ensembl ftp site", required=True)
+    parser.add_argument('-o', help="Output file, fasta format containing candidate sequences to be tested",
+                        required=True)
+    parser.add_argument('-u', '--up_len', help="Upstream sequence length", type=int, default=100)
+    parser.add_argument('-d', '--down_len', help="Downstream sequence length", type=int, default=100)
+
+    args = parser.parse_args()
+
+    annot_trans = args.annot_trans
+    annot_all = args.annot_all
+    aln = args.aln
+    assem = args.genome
+    out_file = args.o
+    up_len = args.up_len
+    down_len = args.down_len
     
     # Read in genome
     chrome_len = {}
@@ -220,8 +251,8 @@ def main():
                 if not is_polya(clipped_seq, True):
                     continue
                 u_seq = qseq[-clipped - up_len: -clipped]
-            # elif cigar_string[-1][0] == 0 and name in seq_dict and seq_dict[name]['utr3']:
-                # u_seq = qseq[-up_len:]
+            elif cigar_string[-1][0] == 0 and name in seq_dict and seq_dict[name]['utr3']:
+                u_seq = qseq[-up_len:]
             else:
                 continue
         
@@ -232,8 +263,8 @@ def main():
                 if not is_polya(clipped_seq, False):
                     continue
                 u_seq = qseq[clipped: clipped + up_len]
-            # elif cigar_string[0][0] == 0 and name in seq_dict and seq_dict[name]['utr3']:
-                # u_seq = qseq[:up_len]
+            elif cigar_string[0][0] == 0 and name in seq_dict and seq_dict[name]['utr3']:
+                u_seq = qseq[:up_len]
             else:
                 continue
 
