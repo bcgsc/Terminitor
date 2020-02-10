@@ -24,7 +24,7 @@ BASES = {'A': 0,  # 0001
          'c': 1,
          'g': 2,
          't': 3}
-VERSION = "v0.0.1"
+VERSION = "v1.0.0"
 
 
 def one_hot_encoding(seq, k_list, kmer_encoding):
@@ -89,7 +89,7 @@ def main():
         '''),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument('-v', '--version', action='version', version='Termin(A)ntor ' + VERSION)
+    parser.add_argument('-v', '--version', action='version', version='Terminitor ' + VERSION)
     parser.add_argument('-t', '--test_file', help="Fasta file to be tested", required=True)
     parser.add_argument('-m', '--model', help="Pre-trained model file", required=True)
     parser.add_argument('-l', help="Length of input sequences", required=True, type=int)

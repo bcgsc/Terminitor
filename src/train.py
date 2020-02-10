@@ -13,8 +13,8 @@ import argparse
 from textwrap import dedent
 from time import strftime
 from itertools import product
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM, Embedding, Bidirectional, Flatten, Dropout, GRU
+from keras.models import Sequential
+from keras.layers import Dense, Embedding, Flatten
 from keras import optimizers
 from sklearn.model_selection import KFold
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -29,7 +29,7 @@ BASES = {'A': 0,  # 0001
          'c': 1,
          'g': 2,
          't': 3}
-VERSION = 'v0.0.1'
+VERSION = 'v1.0.0'
 
 
 def one_hot_encoding(seq, k_list, kmer_encoding):
@@ -130,24 +130,13 @@ def main():
     size2 = len(seq_vector_lab2)
     size3 = len(seq_vector_lab3)
 
-    if size1 != size2 or size1 != size3:
-        train_i1 = random.sample(range(size1), int(0.7 * size1))
-        train_i2 = random.sample(range(size2), int(0.7 * size2))
-        train_i3 = random.sample(range(size3), int(0.7 * size3))
-
-    else:
-        train_i1 = random.sample(range(size1), int(0.7 * size1))
-        train_i2 = train_i1
-        train_i3 = train_i1
+    train_i1 = random.sample(range(size1), int(0.8 * size1))
+    train_i2 = random.sample(range(size2), int(0.8 * size2))
+    train_i3 = random.sample(range(size3), int(0.8 * size3))
        
-    test_val1 = [i for i in range(size1) if i not in train_i1]
-    val_i1 = random.sample(test_val1, int(0.2 * size1))
-
-    test_val2 = [i for i in range(size2) if i not in train_i2]
-    val_i2 = random.sample(test_val2, int(0.2 * size2))
-
-    test_val3 = [i for i in range(size3) if i not in train_i3]
-    val_i3 = random.sample(test_val3, int(0.2 * size3))
+    val_i1 = [i for i in range(size1) if i not in train_i1]
+    val_i2 = [i for i in range(size2) if i not in train_i2]
+    val_i3 = [i for i in range(size3) if i not in train_i3]
 
     x_train = np.concatenate((seq_vector_lab1[train_i1], seq_vector_lab2[train_i2], seq_vector_lab3[train_i3]))
     y_train = np.concatenate((lab_vector_lab1[train_i1], lab_vector_lab2[train_i2], lab_vector_lab3[train_i3]))
