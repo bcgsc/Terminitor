@@ -15,7 +15,7 @@ import numpy as np
 import operator
 
 
-def cluster_helper(cs):
+def cluster_helper(cs, d):
     coord_list = []
 
     if len(cs) == 0:
@@ -25,15 +25,15 @@ def cluster_helper(cs):
             coord = int(np.median(list(cs.keys())))
         else:
             coord = max(cs.items(), key=operator.itemgetter(1))[0]
-        left_cs = {k: v for (k, v) in cs.items() if k < coord - 30}
-        right_cs = {k: v for (k, v) in cs.items() if k > coord + 30}
-        coord_list = cluster_helper(left_cs) + [coord] + cluster_helper(right_cs)
+        left_cs = {k: v for (k, v) in cs.items() if k < coord - d}
+        right_cs = {k: v for (k, v) in cs.items() if k > coord + d}
+        coord_list = cluster_helper(left_cs, d) + [coord] + cluster_helper(right_cs, d)
     return coord_list
 
 
-def clustering(cs):
+def clustering(cs, d):
     '''
-    :param cs: a dictionary, k = cleavage site, v = (tpm, transcript)
+    :param cs: a dictionary, k = cleavage site, v = (prob, transcript)
     :return clusters: a dictionary with all representative cleavage site(s)
     '''
 
@@ -41,12 +41,12 @@ def clustering(cs):
     clusters = {}
     for coord in coord_list:
         if coord not in cs:
-            tpm = cs[list(cs.keys())[0]][0]
+            prob = cs[list(cs.keys())[0]][0]
             trans = cs[list(cs.keys())[0]][1]
         else:
-            tpm = cs[coord][0]
+            prob = cs[coord][0]
             trans = cs[coord][1]
-        clusters[coord] = [tpm, trans]
+        clusters[coord] = [prob, trans]
 
     return clusters
 
@@ -86,11 +86,11 @@ def main():
         for line in f:
             info = line.strip().split()
             if info[0] != last_chr or int(info[1]) >= max(cs.keys()) + d or info[5] != last_strand:
-                clusters = clustering(cs)
+                clusters = clustering(cs, d)
                 for coord, v in clusters.items():
-                    tpm, trans = v[0], v[1]
+                    prob, trans = v[0], v[1]
                     out_line = last_chr + '\t' + str(coord) + '\t' + str(coord + 1) + \
-                               '\t' + trans + '\t' + str(tpm) + '\t' + last_strand + '\n'
+                               '\t' + trans + '\t' + str(prob) + '\t' + last_strand + '\n'
                     out.write(out_line)
                 last_chr = info[0]
                 last_strand = info[5]
@@ -106,14 +106,14 @@ def main():
         else:
             coord = max(cs.items(), key=operator.itemgetter(1))[0]
         if coord not in cs:
-            tpm = cs[list(cs.keys())[0]][0]
+            prob = cs[list(cs.keys())[0]][0]
             trans = cs[list(cs.keys())[0]][1]
         else:
-            tpm = cs[coord][0]
+            prob = cs[coord][0]
             trans = cs[coord][1]
 
         out_line = last_chr + '\t' + str(coord) + '\t' + str(coord + 1) + \
-                   '\t' + trans + '\t' + str(tpm) + '\t' + last_strand + '\n'
+                   '\t' + trans + '\t' + str(prob) + '\t' + last_strand + '\n'
         out.write(out_line)
 
     out.close()            
