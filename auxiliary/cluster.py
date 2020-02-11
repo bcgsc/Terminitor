@@ -37,7 +37,7 @@ def clustering(cs, d):
     :return clusters: a dictionary with all representative cleavage site(s)
     '''
 
-    coord_list = cluster_helper(cs)
+    coord_list = cluster_helper(cs, d)
     clusters = {}
     for coord in coord_list:
         if coord not in cs:
