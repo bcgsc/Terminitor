@@ -66,7 +66,7 @@ def main():
                                                   'ftp site', required=True)
     parser.add_argument('-m', '--aln', help='The alignment file from assembled transcript contigs to reference genome in '
                                             'bam format.', required=True)
-    parser.add_argument('-g', '--genome', help='Reference genome assembly in Fasta format. Can be  downloaded from '
+    parser.add_argument('-g', '--genome', help='Reference genome assembly in Fasta format. Can be downloaded from '
                                                'Ensembl ftp site', required=True)
     parser.add_argument('-o', help='Output file, fasta format containing candidate sequences to be tested',
                         required=True)
@@ -82,7 +82,8 @@ def main():
     out_file = args.o
     up_len = args.up_len
     down_len = args.down_len
-    
+
+    '''
     # Read in genome
     chrome_len = {}
 
@@ -93,6 +94,7 @@ def main():
                 name = info[0][1:]
                 length = int(info[2].split(':')[4])
                 chrome_len[name] = length
+    '''
 
     # GTF file is 1-based inclusive, bed file is 0-based half open
     trans_coord = {}
@@ -215,7 +217,7 @@ def main():
                 seq_dict[name] = {'trans': trans, 'dis2annot': dis2annot, 'utr3': utr3}
             elif (not seq_dict[name]['utr3']) and (not utr3) and seq_dict[name]['dis2annot'] > dis2annot:
                 seq_dict[name] = {'trans': trans, 'dis2annot': dis2annot, 'utr3': utr3}
-    
+
     samfile = pysam.AlignmentFile(aln, 'rb')
     for read in samfile.fetch(until_eof=True):
         cigar_string = read.cigartuples
