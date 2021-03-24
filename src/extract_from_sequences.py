@@ -8,6 +8,7 @@ Major change on Oct 17th, adopting Design 9
 '''
 
 import os
+import sys
 import pysam
 import pybedtools
 import argparse
