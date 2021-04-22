@@ -4,9 +4,11 @@
 Created on Sept 11th 2018
 Major change on Oct 17th, adopting Design 9
 
-@author: Chen
+@author: Chen Yang
 '''
 
+import os
+import sys
 import pysam
 import pybedtools
 import argparse
@@ -41,11 +43,11 @@ def rev_comp(seq):
     new_seq = ''.join([BASE[x] for x in new_seq])
     return new_seq
 
-
+"""
 CHR = ('chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
        'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17',
        'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY')
-
+"""
 
 def main():
     parser = argparse.ArgumentParser(
@@ -66,8 +68,8 @@ def main():
                                                   'ftp site', required=True)
     parser.add_argument('-m', '--aln', help='The alignment file from assembled transcript contigs to reference genome in '
                                             'bam format.', required=True)
-    parser.add_argument('-g', '--genome', help='Reference genome assembly in Fasta format. Can be downloaded from '
-                                               'Ensembl ftp site', required=True)
+    parser.add_argument('-g', '--genome', help='Indexed reference genome assembly in Fasta format, which can be downloaded from '
+                                               'Ensembl', required=True)
     parser.add_argument('-o', help='Output file, fasta format containing candidate sequences to be tested',
                         required=True)
     parser.add_argument('-u', '--up_len', help='Upstream sequence length', type=int, default=100)
@@ -83,27 +85,28 @@ def main():
     up_len = args.up_len
     down_len = args.down_len
 
-    '''
-    # Read in genome
-    chrome_len = {}
+    
+    # Read in chromosome lengths from FASTA index
+    chrom_len = {}
 
-    with open(assem, 'r') as f:
-        for line in f:
-            if line[0] == '>':
-                info = line.split()
-                name = info[0][1:]
-                length = int(info[2].split(':')[4])
-                chrome_len[name] = length
-    '''
+    if os.path.exist(assem + '.fai'):
+        with open(assem + '.fai', 'r') as f:
+            for line in f:
+                cols = line.split()
+                chrom_len[cols[0]] = int(cols[1])
+    else:
+        print('Cannot find FASTA index for reference genome, i.e. `' + assem + '.fai`')
+        sys.exit(1)
+    
 
     # GTF file is 1-based inclusive, bed file is 0-based half open
     trans_coord = {}
     gtf_features = GFF_Reader(annot_all)
     for feature in gtf_features:
         # Sometimes, 'chr' is not in the chromesome name, add it back
-        chrom = feature.iv.chrom if 'chr' in feature.iv.chrom else  'chr' + feature.iv.chrom
-        if chrom not in CHR:
-            continue
+        chrom = feature.iv.chrom #if 'chr' in feature.iv.chrom else  'chr' + feature.iv.chrom
+        #if chrom not in CHR:
+        #    continue
         if chrom not in trans_coord:
             trans_coord[chrom] = {}
         if feature.type == 'transcript':
@@ -187,9 +190,9 @@ def main():
     for info in intersect:
         feature = parse_GFF_attribute_string(info[20][:-1] + '\n')
         trans = feature['transcript_id']
-        chrom = info[0] if 'chr' in info[0] else 'chr' + info[0]
-        if chrom not in CHR:
-            continue
+        chrom = info[0] #if 'chr' in info[0] else 'chr' + info[0]
+        #if chrom not in CHR:
+        #    continue
         
         strand = info[5]
         if strand == '+':
@@ -225,9 +228,9 @@ def main():
         if read.flag != 0 and read.flag != 16:
             continue
         
-        chrom = read.reference_name if 'chr' in read.reference_name else 'chr' + read.reference_name
-        if chrom not in CHR:
-            continue
+        chrom = read.reference_name #if 'chr' in read.reference_name else 'chr' + read.reference_name
+        #if chrom not in CHR:
+        #    continue
 
         if read.flag == 0:
             strand = '+'
@@ -272,11 +275,21 @@ def main():
         if 'U' not in v:
             continue
         if info[-1] == 'F':
-            bed_string.append(info[1] + '\t' + str(int(info[2]) + 1) + '\t' + str(int(info[2]) + down_len + 1) +
+            chrom = info[1]
+            start = int(info[2]) + 1
+            end = int(info[2]) + down_len + 1
+            if start >= 0 and end < chrom_len[chrom]:
+                # interval must be valid
+                bed_string.append(chrom + '\t' + str(start) + '\t' + str(end) +
                               '\t' + k + '\t-\t+')
         else:
-            bed_string.append(info[1] + '\t' + str(int(info[2]) - down_len) + '\t' + str(int(info[2])) + '\t' + k +
-                              '\t-\t-')
+            chrom = info[1]
+            start = int(info[2]) - down_len
+            end = int(info[2])
+            if start >= 0 and end < chrom_len[chrom]:
+                # interval must be valid
+                bed_string.append(chrom + '\t' + str(start) + '\t' + str(end) +
+                              '\t' + k + '\t-\t-')
 
     down_bed = pybedtools.BedTool('\n'.join(bed_string), from_string=True)
 
@@ -292,7 +305,7 @@ def main():
     nonredundant = {}    
     for name, v in seq_dict.items():
         direction = name.split('_')[-1]
-        if 'U' not in v or len(v['U']) < up_len:
+        if 'U' not in v or 'D' not in v or len(v['U']) < up_len:
             continue
         if direction == 'F':
             seq = v['U'] + v['D']
